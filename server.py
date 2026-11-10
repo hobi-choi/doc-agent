@@ -27,24 +27,27 @@ def get_schema() -> str:
 
 @mcp.tool()
 def run_sql(query: str) -> dict:
-    """판매 DB에 읽기 전용 SQL(SELECT 또는 WITH로 시작하는 한 문장)을 실행하고, 결과를 최대 100행까지 돌려준다."""
+    """판매 DB에 읽기 전용 SQL(SELECT 또는 WITH로 시작하는 한 문장)을 실행하고, 결과를 최대 100행까지 돌려준다.
+    실패하면 error 필드에 이유를 담아 돌려준다. 이유를 보고 SQL을 고쳐서 다시 시도한다."""
     q = query.strip().rstrip(";")
     if ";" in q:
-        raise ValueError("SQL은 한 문장만 실행할 수 있음")
+        return {"error": "SQL은 한 문장만 실행할 수 있음"}
     if not re.match(r"(?is)^\s*(select|with)\b", q):
-        raise ValueError("SELECT 또는 WITH로 시작하는 조회 쿼리만 허용")
+        return {"error": "SELECT 또는 WITH로 시작하는 조회 쿼리만 허용"}
 
-    with closing(_connect_readonly()) as con:
-        cur = con.execute(q)
-        columns = [c[0] for c in cur.description]
-        rows = cur.fetchmany(MAX_ROWS + 1)
+    try:
+        with closing(_connect_readonly()) as con:
+            cur = con.execute(q)
+            columns = [c[0] for c in cur.description]
+            rows = cur.fetchmany(MAX_ROWS + 1)
+    except sqlite3.Error as e:
+        return {"error": f"SQL 실행 오류: {e}"}
 
     return {
         "columns": columns,
         "rows": [list(r) for r in rows[:MAX_ROWS]],
         "truncated": len(rows) > MAX_ROWS,
     }
-
 
 def _title(text: str) -> str:
     first = text.strip().splitlines()[0] if text.strip() else ""
