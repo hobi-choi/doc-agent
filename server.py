@@ -1,8 +1,49 @@
 from pathlib import Path
 from mcp.server.mcpserver import MCPServer
+import re
+import sqlite3
+from contextlib import closing
+
 
 mcp = MCPServer("doc-agent", instructions="사내 문서를 검색하고 조회하는 도구 모음")
 DOCS = (Path(__file__).parent / "docs").resolve()
+DB_PATH = (Path(__file__).parent / "data" / "retail.db").resolve()
+MAX_ROWS = 100
+
+
+def _connect_readonly() -> sqlite3.Connection:
+    return sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+
+
+@mcp.tool()
+def get_schema() -> str:
+    """판매 DB의 테이블·컬럼 구조(CREATE 문)를 돌려준다. SQL을 쓰기 전에 먼저 호출한다."""
+    with closing(_connect_readonly()) as con:
+        rows = con.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' ORDER BY name"
+        ).fetchall()
+    return "\n\n".join(r[0] for r in rows)
+
+
+@mcp.tool()
+def run_sql(query: str) -> dict:
+    """판매 DB에 읽기 전용 SQL(SELECT 또는 WITH로 시작하는 한 문장)을 실행하고, 결과를 최대 100행까지 돌려준다."""
+    q = query.strip().rstrip(";")
+    if ";" in q:
+        raise ValueError("SQL은 한 문장만 실행할 수 있음")
+    if not re.match(r"(?is)^\s*(select|with)\b", q):
+        raise ValueError("SELECT 또는 WITH로 시작하는 조회 쿼리만 허용")
+
+    with closing(_connect_readonly()) as con:
+        cur = con.execute(q)
+        columns = [c[0] for c in cur.description]
+        rows = cur.fetchmany(MAX_ROWS + 1)
+
+    return {
+        "columns": columns,
+        "rows": [list(r) for r in rows[:MAX_ROWS]],
+        "truncated": len(rows) > MAX_ROWS,
+    }
 
 
 def _title(text: str) -> str:
