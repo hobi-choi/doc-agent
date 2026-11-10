@@ -20,3 +20,6 @@ uv run mcp dev server.py   # MCP Inspector로 테스트
 - [ ] Elasticsearch BM25 + 벡터 하이브리드 검색으로 교체
 - [ ] LangGraph 에이전트 연결
 - [ ] 평가 하네스 (Recall@k, 답변 근거 일치율)
+
+| `get_schema` | 판매 DB 테이블·컬럼 구조 조회 |
+| `run_sql` | 읽기 전용 SQL 실행 (SELECT 한 문장, 결과 100행 제한) |
