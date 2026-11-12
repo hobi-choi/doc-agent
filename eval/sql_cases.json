@@ -1,0 +1,107 @@
+[
+  {
+    "id": "q01",
+    "level": "easy",
+    "question": "등록된 매장은 모두 몇 개야?",
+    "gold_sql": "SELECT COUNT(*) FROM stores",
+    "order_matters": false
+  },
+  {
+    "id": "q02",
+    "level": "easy",
+    "question": "가격이 20만원 이상인 상품 이름과 가격을 비싼 순으로 보여줘.",
+    "gold_sql": "SELECT name, price FROM products WHERE price >= 200000 ORDER BY price DESC",
+    "order_matters": true
+  },
+  {
+    "id": "q03",
+    "level": "easy",
+    "question": "2026년 전체 매출 합계는 얼마야?",
+    "gold_sql": "SELECT SUM(amount) FROM sales WHERE sale_date BETWEEN '2026-01-01' AND '2026-12-31'",
+    "order_matters": false
+  },
+  {
+    "id": "q04",
+    "level": "easy",
+    "question": "아우터 카테고리에 속한 상품은 뭐가 있어?",
+    "gold_sql": "SELECT name FROM products WHERE category = '아우터'",
+    "order_matters": false
+  },
+  {
+    "id": "q05",
+    "level": "easy",
+    "question": "10월 한 달 동안 판매된 총 수량은?",
+    "gold_sql": "SELECT SUM(quantity) FROM sales WHERE sale_date BETWEEN '2026-10-01' AND '2026-10-31'",
+    "order_matters": false
+  },
+  {
+    "id": "q06",
+    "level": "medium",
+    "question": "부산점의 10월 매출 합계는?",
+    "gold_sql": "SELECT SUM(s.amount) FROM sales s JOIN stores st ON s.store_id = st.store_id WHERE st.name = '부산점' AND s.sale_date BETWEEN '2026-10-01' AND '2026-10-31'",
+    "order_matters": false
+  },
+  {
+    "id": "q07",
+    "level": "medium",
+    "question": "카테고리별 매출 합계를 높은 순으로 보여줘.",
+    "gold_sql": "SELECT p.category, SUM(s.amount) AS total FROM sales s JOIN products p ON s.product_id = p.product_id GROUP BY p.category ORDER BY total DESC",
+    "order_matters": true
+  },
+  {
+    "id": "q08",
+    "level": "medium",
+    "question": "매장별 총 판매 수량을 보여줘.",
+    "gold_sql": "SELECT st.name, SUM(s.quantity) FROM sales s JOIN stores st ON s.store_id = st.store_id GROUP BY st.name",
+    "order_matters": false
+  },
+  {
+    "id": "q09",
+    "level": "medium",
+    "question": "온라인 채널 매출이 전체 매출에서 차지하는 비율(%)은? 소수점 첫째 자리까지.",
+    "gold_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN st.channel = '온라인' THEN s.amount ELSE 0 END) / SUM(s.amount), 1) FROM sales s JOIN stores st ON s.store_id = st.store_id",
+    "order_matters": false
+  },
+  {
+    "id": "q10",
+    "level": "medium",
+    "question": "공식몰에서 판매 수량이 가장 많은 상품 3개는?",
+    "gold_sql": "SELECT p.name, SUM(s.quantity) AS qty FROM sales s JOIN products p ON s.product_id = p.product_id JOIN stores st ON s.store_id = st.store_id WHERE st.name = '공식몰' GROUP BY p.name ORDER BY qty DESC LIMIT 3",
+    "order_matters": true
+  },
+  {
+    "id": "q11",
+    "level": "hard",
+    "question": "월별 아우터 판매 수량 추이를 1월부터 순서대로 보여줘.",
+    "gold_sql": "SELECT substr(s.sale_date, 1, 7) AS month, SUM(s.quantity) FROM sales s JOIN products p ON s.product_id = p.product_id WHERE p.category = '아우터' GROUP BY month ORDER BY month",
+    "order_matters": true
+  },
+  {
+    "id": "q12",
+    "level": "hard",
+    "question": "서울 지역 매장들의 카테고리별 매출을 매장, 카테고리 순으로 보여줘.",
+    "gold_sql": "SELECT st.name, p.category, SUM(s.amount) FROM sales s JOIN stores st ON s.store_id = st.store_id JOIN products p ON s.product_id = p.product_id WHERE st.region = '서울' GROUP BY st.name, p.category ORDER BY st.name, p.category",
+    "order_matters": true
+  },
+  {
+    "id": "q13",
+    "level": "hard",
+    "question": "여름(6~8월)에 가장 많이 팔린 카테고리는 뭐야? 판매 수량 기준.",
+    "gold_sql": "SELECT p.category FROM sales s JOIN products p ON s.product_id = p.product_id WHERE s.sale_date BETWEEN '2026-06-01' AND '2026-08-31' GROUP BY p.category ORDER BY SUM(s.quantity) DESC LIMIT 1",
+    "order_matters": false
+  },
+  {
+    "id": "q14",
+    "level": "hard",
+    "question": "월 매출이 가장 높았던 달과 그 매출액은?",
+    "gold_sql": "SELECT substr(sale_date, 1, 7) AS month, SUM(amount) AS total FROM sales GROUP BY month ORDER BY total DESC LIMIT 1",
+    "order_matters": false
+  },
+  {
+    "id": "q15",
+    "level": "hard",
+    "question": "매장마다 매출 1위 상품을 보여줘.",
+    "gold_sql": "WITH ranked AS (SELECT st.name AS store, p.name AS product, SUM(s.amount) AS total, RANK() OVER (PARTITION BY st.name ORDER BY SUM(s.amount) DESC) AS rk FROM sales s JOIN stores st ON s.store_id = st.store_id JOIN products p ON s.product_id = p.product_id GROUP BY st.name, p.name) SELECT store, product, total FROM ranked WHERE rk = 1",
+    "order_matters": false
+  }
+]
