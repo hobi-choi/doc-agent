@@ -23,3 +23,16 @@ uv run mcp dev server.py   # MCP Inspector로 테스트
 
 | `get_schema` | 판매 DB 테이블·컬럼 구조 조회 |
 | `run_sql` | 읽기 전용 SQL 실행 (SELECT 한 문장, 결과 100행 제한) |
+
+
+## Text-to-SQL 평가 결과
+
+로컬 LLM(qwen2.5-coder:7b, CPU)으로 판매 DB 질문 15개를 실행 정확도로 측정.
+모델은 고정하고, 오류 분석에 따라 컨텍스트와 실행 루프를 개선.
+
+| 버전 | 날짜 | 바꾼 것 | 정확도 | 비고 |
+|---|---|---|---|---|
+| v0 | 2026-11-16 | 기본 프롬프트 (스키마만) | 10/15 (66.7%) | 값 매핑·집계 단위 오류 |
+| v1 | | | | |
+
+자세한 분석: [docs/experiments.md](docs/experiments.md)
