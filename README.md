@@ -36,3 +36,6 @@ uv run mcp dev server.py   # MCP Inspector로 테스트
 | v1 | | | | |
 
 자세한 분석: [docs/experiments.md](docs/experiments.md)
+
+
+| v1 | 2026-11-18 | 컬럼 값 힌트 추가 | 10/15 (66.7%) | q10 개선, q12 회귀(별칭 오류) |
